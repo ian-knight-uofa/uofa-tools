@@ -97,9 +97,15 @@ export SQLTMPDIR=/tmp/sql_files
 
 # Function to reset sql server
 function sql_reset() {
-    sql_stop
-    rm -rf $SQLTMPDIR
-    rm -rf $SQLDATDIR
+    read -p "This reset will delete any exisiting sql databases. Do you wish to continue? (y or cancel)" -n 1 -r
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        sql_stop
+        echo "Cleanup ..."
+        rm -rf $SQLTMPDIR
+        rm -rf $SQLDATDIR
+    else
+        echo "Cancelled."
+    fi
 }
 
 # Function to stop a running sql server
@@ -203,7 +209,7 @@ function sql_start() {
             mysql --no-defaults --socket="$SQLTMPDIR/mysql.sock" --user=root
             printf ' \033[1;92mOK\033[0m \n\n'
         fi
-        printf "\033[1;92mSQL Server Running.\033[0m\nUse sql_stop to stop the server"
+        printf "\033[1;92mSQL Server Running.\033[0m\nUse sql_stop to stop the server\n"
     else
         printf '\033[1;91mSQL Server Failed to start!\033[0m\n'
         sql_stop
