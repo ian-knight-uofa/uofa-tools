@@ -15,7 +15,7 @@ npm config set prefix '~/.npm'
 function load_uofa_tools() {
     if [ ! -e $UOFA_TOOLS_DIR ]; then
         if [ ! -e ~/uofa-tools.zip ]; then
-          curl -Lo ~/uofa-tools.zip https://github.com/validator/validator/releases/download/20.6.30/vnu.jar_20.6.30.zip
+          curl -Lo ~/uofa-tools.zip https://github.com/ian-knight-uofa/uofa-tools/releases/download/21.03.01/uofa-tools.zip
         fi
         unzip -d /tmp ~/uofa-tools.zip
         echo -e "\nUofA Tools Setup\n\n\n\n\n\n"
@@ -77,7 +77,7 @@ function vnu() {
 
     if [ ! -e $VNU_DIR ]; then
         if [ ! -e ~/vnu.jar.zip ]; then
-          curl -Lo ~/vnu.jar.zip https://github.com/ian-knight-uofa/uofa-tools/releases/download/21.03.01/uofa-tools.zip
+          curl -Lo ~/vnu.jar.zip https://github.com/validator/validator/releases/download/20.6.30/vnu.jar_20.6.30.zip
         fi
         unzip -d /tmp ~/vnu.jar.zip
         mv /tmp/dist $VNU_DIR
