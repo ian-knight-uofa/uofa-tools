@@ -6,7 +6,7 @@ export PORT=8080
 export PATH=$UOFA_TOOLS_DIR/usr/bin:$UOFA_TOOLS_DIR/usr/sbin:$HOME/.npm/bin:$PATH
 export LD_LIBRARY_PATH=$UOFA_TOOLS_DIR/usr/lib/mysql/plugin:$UOFA_TOOLS_DIR/usr/lib/mysql/private:$UOFA_TOOLS_DIR/usr/lib/mysql:$UOFA_TOOLS_DIR/usr/lib/x86_64-linux-gnu:$UOFA_TOOLS_DIR/usr/lib/mysql/plugin:$LD_LIBRARY_PATH
 
-if [ ! "$(grep node_modules/ ~/.gitignore)" ]; then
+if [ ! -e ~/.gitignore ] || [ ! "$(grep node_modules/ ~/.gitignore)" ]; then
   echo "node_modules/" >> .gitignore
 fi
 
@@ -14,17 +14,20 @@ npm config set prefix '~/.npm'
 
 function load_uofa_tools() {
     if [ ! -e $UOFA_TOOLS_DIR ]; then
+        echo
         if [ ! -e ~/uofa-tools.zip ]; then
-          curl -Lo ~/uofa-tools.zip https://github.com/ian-knight-uofa/uofa-tools/releases/download/21.03.01/uofa-tools.zip
+          echo 'UofA Tools missing. Downloading ...'
+          curl -Lo ~/uofa-tools.zip https://github.com/ian-knight-uofa/uofa-tools/releases/download/21.03.01/uofa-tools.zip > /dev/null
         fi
-        unzip -d /tmp ~/uofa-tools.zip
-        echo -e "\nUofA Tools Setup\n\n\n\n\n\n"
+        echo 'Loading UofA Tools ...'
+        unzip -d /tmp ~/uofa-tools.zip > /dev/null
+        echo -e "UofA Tools set up done\n\n\n\n\n\n"
     fi
 }
 
 function svn() {
 
-    if [ "$(grep password ~/.subversion/auth/svn.simple/*)" ]; then
+    if [ -e ~/.subversion ] && [ "$(grep password ~/.subversion/auth/svn.simple/* 2> /dev/null)" ]; then
       rm -rf ~/.subversion/auth/svn.simple/*
       rm -rf ~/.c9/metadata/environment/.subversion/auth/svn.simple/*
       sqlite3 ~/.c9/*/collab.v3.db "DELETE FROM Revisions WHERE document_id IN (SELECT id FROM Documents WHERE path LIKE '%subversion/auth/svn.simple%'); DELETE FROM Documents WHERE path LIKE '%subversion/auth/svn.simple%';"
@@ -32,7 +35,7 @@ function svn() {
     fi
 
     # Add globally ignored files
-    if [ ! "$(grep "^global-ignores.*" ~/.subversion/config)" ]; then
+    if [ -e ~/.subversion ] && [ ! "$(grep "^global-ignores.*" ~/.subversion/config)" ]; then
         sed -i 's/# global-ignores.*/global-ignores = *.o *.lo *.la *.al .libs *.so *.so.[0-9]* *.a *.pyc *.pyo __pycache__ node_modules .*.swp .DS_Store [Tt]humbs.db /' ~/.subversion/config
     fi
 
@@ -144,7 +147,7 @@ function sql_start() {
         mkdir "$SQLDATDIR"
         chmod 777 "$SQLDATDIR"
         printf '\n\033[1mInstalling SQL database files...\033[0m\n'
-        mysqld_safe --initialize-insecure --log-error="$SQLTMPDIR/mysql.log" --basedir=$UOFA_TOOLS_DIR/usr --secure-file-priv="" --innodb_log_file_size=16M --innodb_log_group_home_dir="$SQLTMPDIR" --datadir="$SQLDATDIR" --user=$USER --pid-file="$SQLTMPDIR/mysql.pid" --socket="$SQLTMPDIR/mysql.sock"
+        mysqld_safe --initialize-insecure --log-error="$SQLTMPDIR/mysql.log" --basedir=$UOFA_TOOLS_DIR/usr --secure-file-priv="" --performance_schema=OFF --innodb_log_file_size=8M --innodb_log_group_home_dir="$SQLTMPDIR" --datadir="$SQLDATDIR" --user=$USER --pid-file="$SQLTMPDIR/mysql.pid" --socket="$SQLTMPDIR/mysql.sock"
         SQLINIT=1
     fi
 
@@ -185,8 +188,7 @@ function sql_start() {
 
     # Start SQL Server
     printf "\033[1mStarting SQL Server...\033[0m\n"
-    mysqld_safe --no-defaults  --basedir=$UOFA_TOOLS_DIR/usr --secure-file-priv="" --datadir="$SQLDATDIR" --log-error="$SQLDATDIR/mysql.log" --lc-messages-dir=$UOFA_TOOLS_DIR/usr/share/mysql/english --innodb_log_file_size=16M --innodb_log_group_home_dir="$SQLTMPDIR" --pid-file="$SQLTMPDIR/mysql.pid" --socket="$SQLTMPDIR/mysql.sock" &
-    #mysqld_safe --no-defaults --datadir="$SQLDATDIR" --log-error=mysql.log --pid-file=mysql.pid --socket=mysql.sock &
+    mysqld_safe --no-defaults  --basedir=$UOFA_TOOLS_DIR/usr --secure-file-priv="" --performance_schema=OFF --datadir="$SQLDATDIR" --log-error="$SQLDATDIR/mysql.log" --lc-messages-dir=$UOFA_TOOLS_DIR/usr/share/mysql/english --innodb_log_file_size=8M --innodb_log_group_home_dir="$SQLTMPDIR" --pid-file="$SQLTMPDIR/mysql.pid" --socket="$SQLTMPDIR/mysql.sock" &
     SQLPID=$!
 
     # Wait up to 20s until sock & pid files created
