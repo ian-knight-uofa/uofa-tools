@@ -1,56 +1,10 @@
-export UOFA_TOOLS_DIR=/tmp/uofa-tools
-export VNU_DIR=/tmp/vnu
-export NPM_CONFIG_PREFIX=~/.npm
+export VNU_DIR=/home/ubuntu/vnu
 export PORT=8080
-
-export PATH=$UOFA_TOOLS_DIR/usr/bin:$UOFA_TOOLS_DIR/usr/sbin:$HOME/.npm/bin:$PATH
-export LD_LIBRARY_PATH=$UOFA_TOOLS_DIR/usr/lib/mysql/plugin:$UOFA_TOOLS_DIR/usr/lib/mysql/private:$UOFA_TOOLS_DIR/usr/lib/mysql:$UOFA_TOOLS_DIR/usr/lib/x86_64-linux-gnu:$UOFA_TOOLS_DIR/usr/lib/mysql/plugin:$LD_LIBRARY_PATH
-
-if [ ! -e ~/.gitignore ] || [ ! "$(grep node_modules/ ~/.gitignore)" ]; then
-  echo "node_modules/" >> .gitignore
-fi
-
-npm config set prefix '~/.npm'
-
-function load_uofa_tools() {
-    if [ ! -e $UOFA_TOOLS_DIR ]; then
-        echo
-        if [ ! -e ~/uofa-tools.zip ]; then
-          echo 'UofA Tools missing. Downloading ...'
-          curl -Lo ~/uofa-tools.zip https://github.com/ian-knight-uofa/uofa-tools/releases/download/21.03.01/uofa-tools.zip > /dev/null
-        fi
-        echo 'Loading UofA Tools ...'
-        unzip -d /tmp ~/uofa-tools.zip > /dev/null
-        echo -e "UofA Tools set up done\n\n\n\n\n\n"
-    fi
-}
-
-function svn() {
-
-    if [ -e ~/.subversion ] && [ "$(grep password ~/.subversion/auth/svn.simple/* 2> /dev/null)" ]; then
-      rm -rf ~/.subversion/auth/svn.simple/*
-      rm -rf ~/.c9/metadata/environment/.subversion/auth/svn.simple/*
-      sqlite3 ~/.c9/*/collab.v3.db "DELETE FROM Revisions WHERE document_id IN (SELECT id FROM Documents WHERE path LIKE '%subversion/auth/svn.simple%'); DELETE FROM Documents WHERE path LIKE '%subversion/auth/svn.simple%';"
-      echo -e '\nstore-passwords = no\nstore-ssl-client-cert-pp = no\nstore-plaintext-passwords = no\nstore-ssl-client-cert-pp-plaintext = no' >> ~/.subversion/servers
-    fi
-
-    # Add globally ignored files
-    if [ -e ~/.subversion ] && [ ! "$(grep "^global-ignores.*" ~/.subversion/config)" ]; then
-        sed -i 's/# global-ignores.*/global-ignores = *.o *.lo *.la *.al .libs *.so *.so.[0-9]* *.a *.pyc *.pyo __pycache__ node_modules .*.swp .DS_Store [Tt]humbs.db /' ~/.subversion/config
-    fi
-
-    # Install SVN
-    load_uofa_tools
-
-    args=( "$@" )
-    command svn "${args[@]}"
-
-}
 
 function express() {
 
     if [ ! "$(type -f express)" ]; then
-      npm install --prefix=$HOME/.npm -g express-generator
+      sudo npm install -g express-generator
       echo -e "\nExpress Generator Installed\n\n\n\n\n\n"
     fi
 
@@ -67,7 +21,7 @@ function express() {
 function eslint() {
 
     if [ ! "$(type -f eslint)" ]; then
-      npm install --prefix=$HOME/.npm -g eslint
+      sudo npm install -g eslint
       echo -e "\nESLint Installed\n\n\n\n\n\n"
     fi
 
@@ -79,23 +33,23 @@ function eslint() {
 function vnu() {
 
     if [ ! -e $VNU_DIR ]; then
-        if [ ! -e ~/vnu.jar.zip ]; then
-          curl -Lo ~/vnu.jar.zip https://github.com/validator/validator/releases/download/20.6.30/vnu.jar_20.6.30.zip
+        if [ ! -e /tmp/vnu.jar.zip ]; then
+          curl -Lo /tmp/vnu.jar.zip https://github.com/validator/validator/releases/download/20.6.30/vnu.jar_20.6.30.zip
         fi
-        unzip -d /tmp ~/vnu.jar.zip
+        unzip -d /tmp /tmp/vnu.jar.zip
         mv /tmp/dist $VNU_DIR
         echo -e "\nvNU Setup\n\n\n\n\n\n"
     fi
 
     args=( "$@" )
-    java -jar /tmp/vnu/vnu.jar "${args[@]}"
+    java -jar $VNU_DIR/vnu.jar "${args[@]}"
 
 }
 
 export SQLDATDIR=/home/ubuntu/sql_data
 export SQLTMPDIR=/tmp/sql_files
 
-# WDC SQL Server Setup Script -- v2.0 January 2020
+# WDC SQL Server Setup Script -- v2.2 March 2022
 # Written by Ian Knight
 
 # Function to reset sql server
@@ -132,7 +86,10 @@ function sql_stop() {
 function sql_start() {
 
     # Install MySQL
-    load_uofa_tools
+    if [ ! "$(command -v mysqld_safe)" ]; then
+      sudo apt install -y mysql-server
+      echo -e "\nSQL Server Installed\n\n\n\n\n\n"
+    fi
 
     SQLINIT=0
 
@@ -147,7 +104,7 @@ function sql_start() {
         mkdir "$SQLDATDIR"
         chmod 777 "$SQLDATDIR"
         printf '\n\033[1mInstalling SQL database files...\033[0m\n'
-        mysqld_safe --initialize-insecure --log-error="$SQLTMPDIR/mysql.log" --basedir=$UOFA_TOOLS_DIR/usr --secure-file-priv="" --performance_schema=OFF --innodb_log_file_size=8M --innodb_log_group_home_dir="$SQLTMPDIR" --datadir="$SQLDATDIR" --user=$USER --pid-file="$SQLTMPDIR/mysql.pid" --socket="$SQLTMPDIR/mysql.sock"
+        mysqld_safe --initialize-insecure --log-error="$SQLTMPDIR/mysql.log" --secure-file-priv="" --performance_schema=OFF --innodb_log_file_size=8M --innodb_log_group_home_dir="$SQLTMPDIR" --datadir="$SQLDATDIR" --user=$USER --pid-file="$SQLTMPDIR/mysql.pid" --socket="$SQLTMPDIR/mysql.sock"
         SQLINIT=1
     fi
 
@@ -188,7 +145,7 @@ function sql_start() {
 
     # Start SQL Server
     printf "\033[1mStarting SQL Server...\033[0m\n"
-    mysqld_safe --no-defaults  --basedir=$UOFA_TOOLS_DIR/usr --secure-file-priv="" --performance_schema=OFF --datadir="$SQLDATDIR" --log-error="$SQLDATDIR/mysql.log" --lc-messages-dir=$UOFA_TOOLS_DIR/usr/share/mysql/english --innodb_log_file_size=8M --innodb_log_group_home_dir="$SQLTMPDIR" --pid-file="$SQLTMPDIR/mysql.pid" --socket="$SQLTMPDIR/mysql.sock" &
+    mysqld_safe --no-defaults --secure-file-priv="" --performance_schema=OFF --datadir="$SQLDATDIR" --log-error="$SQLDATDIR/mysql.log" --innodb_log_file_size=8M --innodb_log_group_home_dir="$SQLTMPDIR" --pid-file="$SQLTMPDIR/mysql.pid" --socket="$SQLTMPDIR/mysql.sock" &
     SQLPID=$!
 
     # Wait up to 20s until sock & pid files created
@@ -219,11 +176,9 @@ function sql_start() {
 
 }
 
-export -f svn
 export -f express
 export -f eslint
 export -f vnu
 export -f sql_stop
 export -f sql_start
 export -f sql_reset
-export -f load_uofa_tools

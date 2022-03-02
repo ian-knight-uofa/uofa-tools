@@ -1,2 +1,2 @@
 # uofa-tools
-Tools &amp; scripts for UofA students using the CS50 IDE
+Tools &amp; scripts for UofA students using the VSCode for CS50 IDE
