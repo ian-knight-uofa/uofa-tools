@@ -145,7 +145,7 @@ function sql_start() {
 
     # Start SQL Server
     printf "\033[1mStarting SQL Server...\033[0m\n"
-    mysqld_safe --no-defaults --secure-file-priv="" --performance_schema=OFF --datadir="$SQLDATDIR" --log-error="$SQLDATDIR/mysql.log" --innodb_log_file_size=8M --innodb_log_group_home_dir="$SQLTMPDIR" --pid-file="$SQLTMPDIR/mysql.pid" --socket="$SQLTMPDIR/mysql.sock" &
+    mysqld_safe --no-defaults --secure-file-priv="" --default-authentication-plugin=mysql_native_password --performance_schema=OFF --datadir="$SQLDATDIR" --log-error="$SQLDATDIR/mysql.log" --innodb_log_file_size=8M --innodb_log_group_home_dir="$SQLTMPDIR" --pid-file="$SQLTMPDIR/mysql.pid" --socket="$SQLTMPDIR/mysql.sock" &
     SQLPID=$!
 
     # Wait up to 20s until sock & pid files created
@@ -176,9 +176,33 @@ function sql_start() {
 
 }
 
+function juice_shop() {
+
+    (
+        export NODE_ENV=unsafe
+        export JUICE_DIR=~/juice-shop
+
+        if [ ! -e $JUICE_DIR ]; then
+            if [ ! -e ~/juice-shop.tar.gz ]; then
+                curl -Lo ~/juice-shop.tar.gz https://github.com/juice-shop/juice-shop/releases/download/v13.3.0/juice-shop-13.3.0_node17_linux_x64.tgz
+            fi
+            echo -e "\nLoading ...\n"
+            tar -xzf ~/juice-shop.tar.gz -C ~/
+            mv ~/juice-shop_13.3.0 $JUICE_DIR
+            echo -e "\nJuice Shop files installed.\n\n\n"
+        fi
+
+        cd $JUICE_DIR
+        echo -e "Getting ready to sell some Juice!\n\n\n"
+        npm start
+    )
+
+}
+
 export -f express
 export -f eslint
 export -f vnu
 export -f sql_stop
 export -f sql_start
 export -f sql_reset
+export -f juice_shop
