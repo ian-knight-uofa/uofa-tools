@@ -184,11 +184,30 @@ function juice_shop() {
 
         if [ ! -e $JUICE_DIR ]; then
             if [ ! -e ~/juice-shop.tar.gz ]; then
-                curl -Lo ~/juice-shop.tar.gz https://github.com/juice-shop/juice-shop/releases/download/v13.3.0/juice-shop-13.3.0_node17_linux_x64.tgz
+                if node --version | grep v18 > /dev/null ; then
+                    echo "Node 18 detected."
+                    curl -Lo ~/juice-shop.tar.gz https://github.com/juice-shop/juice-shop/releases/download/v14.0.1/juice-shop-14.0.1_node18_linux_x64.tgz
+                elif node --version | grep v17 > /dev/null ; then
+                    echo "Node 17 detected."
+                    curl -Lo ~/juice-shop.tar.gz https://github.com/juice-shop/juice-shop/releases/download/v13.3.0/juice-shop-13.3.0_node17_linux_x64.tgz
+                elif node --version | grep v16 > /dev/null ; then
+                    echo "Node 16 detected."
+                    curl -Lo ~/juice-shop.tar.gz https://github.com/juice-shop/juice-shop/releases/download/v14.0.1/juice-shop-14.0.1_node16_linux_x64.tgz
+                elif node --version | grep v14 > /dev/null ; then
+                    echo "Node 14 detected."
+                    curl -Lo ~/juice-shop.tar.gz https://github.com/juice-shop/juice-shop/releases/download/v14.0.1/juice-shop-14.0.1_node14_linux_x64.tgz
+                elif node --version | grep v12 > /dev/null ; then
+                    echo "Node 12 detected."
+                    curl -Lo ~/juice-shop.tar.gz https://github.com/juice-shop/juice-shop/releases/download/v13.3.0/juice-shop-13.3.0_node12_linux_x64.tgz
+                else
+                    echo -e "\nUnsupported NodeJS version. Exiting.\n"
+                    return
+                fi
             fi
             echo -e "\nLoading ...\n"
             tar -xzf ~/juice-shop.tar.gz -C ~/
             mv ~/juice-shop_13.3.0 $JUICE_DIR
+            mv ~/juice-shop_14.0.1 $JUICE_DIR
             echo -e "\nJuice Shop files installed.\n\n\n"
         fi
 
