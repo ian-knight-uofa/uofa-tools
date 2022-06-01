@@ -87,7 +87,7 @@ function sql_start() {
 
     # Install MySQL
     if [ ! "$(command -v mysqld_safe)" ]; then
-      sudo apt install -y mysql-server
+      sudo apt update && sudo apt install -y mysql-server
       echo -e "\nSQL Server Installed\n\n\n\n\n\n"
     fi
 
